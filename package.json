@@ -1,0 +1,16 @@
+{
+  "name": "websocket_whiteboard",
+  "version": "1.0.0",
+  "description": "normal whiteboard socket based",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "hemant",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.9",
+    "ws": "^8.18.1"
+  }
+}
