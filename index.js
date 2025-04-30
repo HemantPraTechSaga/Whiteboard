@@ -31,4 +31,4 @@ app.post('/data', (req, res) => {
 // Start server
 app.listen(PORT, HOST, () => {
     console.log(`Express server running at http://${HOST}:${PORT}`);
-});
+});   
