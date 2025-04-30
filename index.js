@@ -1,52 +1,19 @@
-const WebSocket = require('ws');
 const express = require('express');
+const { WebSocketServer } = require('ws');
+
+const HTTP_PORT = 3000;
+const WS_PORT = 8080;
+const HOST = '127.0.0.1'; // localhost only
+
 const app = express();
 
-// Create WebSocket server
-const server = new WebSocket.WebSocketServer({ port: 8080 });
-
-server.on('connection', (ws) => {
-    console.log('Client connected');
-
-    ws.on('message', (message) => {
-        console.log('Received message:', message.toString());
-
-        let data;
-        try {
-            data = JSON.parse(message.toString());
-        } catch (error) {
-            console.error('Invalid JSON received:', message);
-            return;
-        }
-
-        // Handle different message types
-        if (data.type === 'draw') {
-            // Broadcast drawing data to all connected clients
-            server.clients.forEach((client) => {
-                if (client !== ws && client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(data));
-                }
-            });
-        }
-
-        // Respond to "hit" messages
-        if (data.type === 'hit') {
-            const response = { type: 'response', message: 'Hit received!' };
-            ws.send(JSON.stringify(response));  // Send response back to the client
-        }
-    });
-
-    ws.on('close', () => {
-        console.log('Client disconnected');
-    });
-});
-
-// Serve a simple Express endpoint for testing the server
+// ===========================
+// Express Server
+// ===========================
 app.get('/', (req, res) => {
     res.send('WebSocket server is running');
 });
 
-// Test endpoint to return a sample response
 app.get('/test', (req, res) => {
     res.json({
         status: 'success',
@@ -54,9 +21,63 @@ app.get('/test', (req, res) => {
     });
 });
 
-// Start Express server and bind to all interfaces
-app.listen(3000, '0.0.0.0', () => {
-    console.log('Express server running on http://0.0.0.0:3000');
+app.listen(HTTP_PORT, HOST, () => {
+    console.log(`Express server running on http://${HOST}:${HTTP_PORT}`);
 });
 
-console.log('WebSocket server is running on ws://localhost:8080');
+// ===========================
+// WebSocket Server
+// ===========================
+const wss = new WebSocketServer({ port: WS_PORT, host: HOST });
+
+wss.on('connection', (ws, req) => {
+    const clientIP = req.socket.remoteAddress;
+    console.log(`Client connected from ${clientIP}`);
+
+    ws.on('message', (rawMessage) => {
+        const message = rawMessage.toString();
+        console.log('Received message:', message);
+
+        let data;
+        try {
+            data = JSON.parse(message);
+        } catch (error) {
+            console.error('Invalid JSON received:', message);
+            return;
+        }
+
+        switch (data.type) {
+            case 'draw':
+                broadcastExceptSender(ws, JSON.stringify(data));
+                break;
+
+            case 'hit':
+                ws.send(JSON.stringify({
+                    type: 'response',
+                    message: 'Hit received!',
+                }));
+                break;
+
+            default:
+                console.warn('Unhandled message type:', data.type);
+        }
+    });
+
+    ws.on('close', () => {
+        console.log(`Client disconnected: ${clientIP}`);
+    });
+
+    ws.on('error', (err) => {
+        console.error('WebSocket error:', err.message);
+    });
+});
+
+function broadcastExceptSender(sender, message) {
+    wss.clients.forEach((client) => {
+        if (client !== sender && client.readyState === client.OPEN) {
+            client.send(message);
+        }
+    });
+}
+
+console.log(`WebSocket server running on ws://${HOST}:${WS_PORT}`);
