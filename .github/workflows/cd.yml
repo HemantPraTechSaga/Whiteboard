@@ -1,0 +1,20 @@
+# .github/workflows/cd.yml
+name: CD - Deploy Whiteboard to Local Vagrant
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # <-- your Vagrant box runner
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Stop old containers
+        run: docker compose down
+
+      - name: Start updated containers
+        run: docker compose up -d --build
