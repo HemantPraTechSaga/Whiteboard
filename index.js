@@ -54,9 +54,9 @@ app.get('/test', (req, res) => {
     });
 });
 
-// Start Express server
-app.listen(3000, () => {
-    console.log('Express server running on http://localhost:3000');
+// Start Express server and bind to all interfaces
+app.listen(3000, '0.0.0.0', () => {
+    console.log('Express server running on http://0.0.0.0:3000');
 });
 
 console.log('WebSocket server is running on ws://localhost:8080');
