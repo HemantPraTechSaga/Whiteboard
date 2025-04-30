@@ -13,8 +13,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Stop old containers
+      - name: Navigate to Docker Compose directory
+        working-directory: /my-docker-setup
         run: docker compose down
+      
+      - name: Rebuild and restart whiteboard container
+        working-directory: /my-docker-setup
+        run: docker compose up -d --build whiteboard-server
 
-      - name: Start updated containers
-        run: docker compose up -d --build
