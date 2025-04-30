@@ -19,5 +19,5 @@ jobs:
       
       - name: Rebuild and restart whiteboard container
         working-directory: /my-docker-setup
-        run: docker compose up -d --build whiteboard-server
+        run: docker compose up -d --build server1
 
